@@ -7,7 +7,7 @@
         "dev": "ts-node-dev -r tsconfig-paths/register --inspect --ignore-watch node_modules src/server.ts",
         "bug": "ts-node-dev -r tsconfig-paths/register --inspect --transpileOnly --ignore-watch node_modules src/server.ts",
         "build": "babel src --extensions \".js,.ts\" --out-dir dist --copy-files",
-        "start": "ts-node src/server.ts",
+        "start": "node dist/server.js",
         "typeorm": "ts-node-dev node_modules/typeorm/cli.js"
     },
     "keywords": [],
