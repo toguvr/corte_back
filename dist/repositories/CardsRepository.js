@@ -7,7 +7,7 @@ exports.default = void 0;
 
 var _typeorm = require("typeorm");
 
-var _Card = _interopRequireDefault(require("../../src/entities/Card"));
+var _Card = _interopRequireDefault(require("../entities/Card"));
 
 var _dec, _class;
 

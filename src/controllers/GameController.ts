@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import RoomsService from "../services/RoomsService";
 import GameService from "../services/GameService";
-import { io } from "src/http";
+import { io } from "../http";
 
 export default class GameController {
   async create(req: Request, response: Response) {

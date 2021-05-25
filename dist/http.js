@@ -3,7 +3,7 @@
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports.io = exports.http = void 0;
+exports.connectedUsers = exports.io = exports.http = void 0;
 
 var _express = _interopRequireDefault(require("express"));
 
@@ -28,7 +28,14 @@ exports.http = http;
 const io = new _socket.Server(http); // Criando Protocolo WS
 
 exports.io = io;
-io.on("connection", socket => {// console.log("Se conectou", socket.id);
+const connectedUsers = {};
+exports.connectedUsers = connectedUsers;
+io.on("connection", socket => {
+  const user_id = socket.handshake.query.user_id;
+  connectedUsers[user_id] = socket.id;
+  socket.on("disconnect", () => {
+    delete connectedUsers[user_id];
+  });
 });
 app.use((0, _cors.default)({
   origin: [process.env.APP_WEB_URL, "http://localhost:3000"]

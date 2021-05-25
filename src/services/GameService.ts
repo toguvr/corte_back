@@ -4,12 +4,12 @@ import Room from "../entities/Room";
 import User from "../entities/User";
 import RoomsRepository from "../repositories/RoomsRepository";
 import UsersRepository from "../repositories/UsersRepository";
-import { cartas } from "../../src/utils";
-import UserCard from "../../src/entities/UserCard";
-import UserCardRepository from "../../src/repositories/UserCardRepository";
-import CardsRepository from "../../src/repositories/CardsRepository";
-import Card from "../../src/entities/Card";
-import { io } from "src/http";
+import { cartas } from "../utils";
+import UserCard from "../entities/UserCard";
+import UserCardRepository from "../repositories/UserCardRepository";
+import CardsRepository from "../repositories/CardsRepository";
+import Card from "../entities/Card";
+import { io } from "../http";
 
 interface IRoomsCreate {
   nome_sala: string;
