@@ -668,7 +668,7 @@ class GameService {
       await this.usersRepository.save(user);
       const opponents = await this.usersRepository.find({
         where: {
-          id: (0, _typeorm.Not)(victim_id),
+          id: (0, _typeorm.Not)(room.users[Number(room.round) - 1].id),
           room_id: sala_id
         }
       });

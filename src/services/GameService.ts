@@ -555,6 +555,7 @@ export default class GameService {
 
       io.emit("actionDid");
     }
+    return io.emit("passOnly");
 
     return room;
   }
@@ -612,6 +613,7 @@ export default class GameService {
         await this.turnDoubtsFalse(sala_id);
         io.emit("passRound");
       }
+      return io.emit("passOnly");
     }
     if (doubt) {
       const hasDuque = victim.cards.some((card) => card.name === cartas[0]);
@@ -701,7 +703,7 @@ export default class GameService {
 
       const opponents = await this.usersRepository.find({
         where: {
-          id: Not(victim_id),
+          id: Not(room.users[Number(room.round) - 1].id),
           room_id: sala_id,
         },
       });
@@ -723,9 +725,9 @@ export default class GameService {
 
         await this.roomsRepository.save(room);
         await this.turnDoubtsFalse(sala_id);
-
         io.emit("passRound");
       }
+      return io.emit("passOnly");
     }
     if (doubt) {
       const hasDuque = victim.cards.some((card) => card.name === cartas[0]);
@@ -843,10 +845,11 @@ export default class GameService {
 
         await this.roomsRepository.save(room);
         await this.turnDoubtsFalse(sala_id);
-
         return io.emit("passRound");
       }
+      return io.emit("passOnly");
     }
+
     if (doubtType === "blockPass") {
       user.pass = true;
       await this.usersRepository.save(user);
@@ -868,12 +871,15 @@ export default class GameService {
 
         await this.roomsRepository.save(room);
         await this.turnDoubtsFalse(sala_id);
-
         return io.emit("passRound");
       }
+      return io.emit("passOnly");
     }
+
     if (doubtType === "doubt") {
-      const hasCapitao = victim.cards.some((card) => card.name === cartas[1]);
+      const hasCapitao = room.users[Number(room.round) - 1].cards.some(
+        (card) => card.name === cartas[1]
+      );
 
       if (!hasCapitao) {
         await this.killCard(room.users[Number(room.round) - 1].id);
@@ -1025,6 +1031,7 @@ export default class GameService {
 
         return io.emit("passRound");
       }
+      return io.emit("passOnly");
     }
 
     if (doubtType === "doubt") {
@@ -1151,6 +1158,7 @@ export default class GameService {
 
         return io.emit("passRound");
       }
+      return io.emit("passOnly");
     }
     if (doubtType === "blockPass") {
       user.pass = true;
