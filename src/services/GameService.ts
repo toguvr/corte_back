@@ -1264,10 +1264,10 @@ export default class GameService {
         });
 
         if (!doubtUser) {
-          throw new AppError("Jogador" + doubtUser.username + " morreu.");
+          throw new AppError("Jogador" + doubtUser?.username + " morreu.");
         }
 
-        if (Number(doubtUser.cards) > 0) {
+        if (Number(doubtUser?.cards) > 0) {
           await this.killCard(victim_id);
         }
 
