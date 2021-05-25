@@ -38,13 +38,12 @@
 
 ## :warning: Requisitos <a name="requires"></a>
 
-* [node V14.16](https://nodejs.org/pt-br/download/)
-* [yarn v3.0](https://classic.yarnpkg.com/en/docs/install/#windows-stable)
+- [node V14.16](https://nodejs.org/pt-br/download/)
+- [yarn v3.0](https://classic.yarnpkg.com/en/docs/install/#windows-stable)
 
 <p align="left">Ou</p>
 
-* [npm v6.14](https://www.npmjs.com/package/download)
-
+- [npm v6.14](https://www.npmjs.com/package/download)
 
 ## :warning: Instalação <a name="install"></a>
 
@@ -67,7 +66,8 @@ $ yarn typeorm migration:run
 ```
 
 # Por enquanto é só! Obrigado ;)
+
 <br>
-<a href="https://github.com/WendelNogueira23">
-<p align="center">Wendel Nogueira</p>
+<a href="https://github.com/toguvr">
+<p align="center">Augusto Telles</p>
 </a>
