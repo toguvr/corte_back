@@ -259,30 +259,29 @@ export default class GameService {
       throw new AppError("Sala não existe.");
     }
 
-    if (Number(room.users.length) < 2) {
-      throw new AppError("O jogo já acabou.");
+    if (Number(room.users.length) > 1) {
+      const userInRoundIndex = room.users.findIndex(
+        (currentUser) => String(currentUser.id) === String(user_round_id)
+      );
+
+      let next_round;
+
+      if (
+        Number(Number(userInRoundIndex) + 1) < Number(room.users.length) &&
+        Number(room.users.length) > 1 &&
+        userInRoundIndex !== -1
+      ) {
+        //pega o index de quem esta jogando, soma +1 para pegar o round dele e soma mais um para ser o proximo jogador.
+        next_round = userInRoundIndex + 2;
+      } else if (userInRoundIndex === -1) {
+        next_round = room.round;
+      } else {
+        next_round = 1;
+      }
+
+      return next_round;
     }
-
-    const userInRoundIndex = room.users.findIndex(
-      (currentUser) => String(currentUser.id) === String(user_round_id)
-    );
-
-    let next_round;
-
-    if (
-      Number(Number(userInRoundIndex) + 1) < Number(room.users.length) &&
-      Number(room.users.length) > 1 &&
-      userInRoundIndex !== -1
-    ) {
-      //pega o index de quem esta jogando, soma +1 para pegar o round dele e soma mais um para ser o proximo jogador.
-      next_round = userInRoundIndex + 2;
-    } else if (userInRoundIndex === -1) {
-      next_round = room.round;
-    } else {
-      next_round = 1;
-    }
-
-    return next_round;
+    return 1;
   }
 
   async action({ sala_id, user_id, action, victim_id, doubtActionType }) {
