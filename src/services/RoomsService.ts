@@ -56,13 +56,24 @@ export default class RoomsService {
 
   async create({ nome_sala, nome_usuario, avatar }: IRoomsCreate) {
     const roomExists = await this.roomsRepository.findOne({
-      relations: ["users"],
+      relations: ["users", "users.cards"],
       where: {
         name: nome_sala,
       },
     });
 
     if (roomExists) {
+      const allZero = roomExists?.users.every((user) => {
+        return user.cards.length === 0;
+      });
+      if (
+        Number(roomExists.round) > 0 &&
+        roomExists?.users?.length > 0 &&
+        !allZero
+      ) {
+        throw new AppError("Jogo já em andamento.");
+      }
+
       const existUserInRoom = await this.usersRepository.findOne({
         username: nome_usuario,
         room_id: roomExists.id,

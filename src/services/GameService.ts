@@ -1161,8 +1161,23 @@ export default class GameService {
       return io.emit("passOnly");
     }
     if (doubtType === "blockPass") {
-      user.pass = true;
-      await this.usersRepository.save(user);
+      const userRound = await this.usersRepository.findOne({
+        relations: ["cards"],
+        where: {
+          id: room.users[Number(room.round) - 1].id,
+        },
+      });
+
+      if (Number(userRound.coins) < 3) {
+        throw new AppError(
+          "Você não pode matar ninguém se não tiver 3 moedas."
+        );
+      }
+      userRound.coins = Number(userRound.coins) - 3;
+
+      userRound.pass = true;
+
+      await this.usersRepository.save(userRound);
 
       room.round = this.nextRound(room.round, room.users.length);
       room.waiting = false;
@@ -1185,6 +1200,15 @@ export default class GameService {
       );
 
       if (!hasAssassin) {
+        if (Number(userRound.coins) < 3) {
+          throw new AppError(
+            "Você não pode matar ninguém se não tiver 3 moedas."
+          );
+        }
+        userRound.coins = Number(userRound.coins) - 3;
+
+        await this.usersRepository.save(userRound);
+
         await this.killCard(room.users[Number(room.round) - 1].id);
         await this.turnDoubtsFalse(sala_id);
         const currentRoom = await this.roomsRepository.findOne({
@@ -1195,10 +1219,12 @@ export default class GameService {
         });
 
         currentRoom.waiting = false;
+
         currentRoom.round = this.nextRound(
           currentRoom.round,
           currentRoom.users.length
         );
+
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
       }
@@ -1219,10 +1245,10 @@ export default class GameService {
       });
 
       if (!doubtUser) {
-        throw new AppError("Jogador" + doubtUser.username + " morreu.");
+        throw new AppError("Jogador" + doubtUser?.username + " morreu.");
       }
 
-      if (Number(doubtUser.cards) > 0) {
+      if (Number(doubtUser.cards.length) > 0) {
         await this.killCard(user_id);
       }
 
@@ -1287,6 +1313,22 @@ export default class GameService {
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
       }
+
+      const userRound = await this.usersRepository.findOne({
+        relations: ["cards"],
+        where: {
+          id: room.users[Number(room.round) - 1].id,
+        },
+      });
+
+      if (Number(userRound.coins) < 3) {
+        throw new AppError(
+          "Você não pode matar ninguém se não tiver 3 moedas."
+        );
+      }
+      userRound.coins = Number(userRound.coins) - 3;
+
+      await this.usersRepository.save(userRound);
 
       await this.killCard(user_id);
       const finishRoom = await this.roomsRepository.findOne({
