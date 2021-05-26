@@ -247,12 +247,42 @@ export default class GameService {
     return room;
   }
 
-  nextRound(curentRound, userLength) {
-    if (String(curentRound) === String(userLength)) {
-      return 1;
-    } else {
-      return Number(curentRound) + 1;
+  async nextRound({ room_id, user_round_id }) {
+    const room = await this.roomsRepository.findOne({
+      relations: ["users", "users.cards"],
+      where: {
+        id: room_id,
+      },
+    });
+
+    if (!room) {
+      throw new AppError("Sala não existe.");
     }
+
+    if (Number(room.users.length) < 2) {
+      throw new AppError("O jogo já acabou.");
+    }
+
+    const userInRoundIndex = room.users.findIndex(
+      (currentUser) => String(currentUser.id) === String(user_round_id)
+    );
+
+    let next_round;
+
+    if (
+      Number(Number(userInRoundIndex) + 1) < Number(room.users.length) &&
+      Number(room.users.length) > 1 &&
+      userInRoundIndex !== -1
+    ) {
+      //pega o index de quem esta jogando, soma +1 para pegar o round dele e soma mais um para ser o proximo jogador.
+      next_round = userInRoundIndex + 2;
+    } else if (userInRoundIndex === -1) {
+      next_round = room.round;
+    } else {
+      next_round = 1;
+    }
+
+    return next_round;
   }
 
   async action({ sala_id, user_id, action, victim_id, doubtActionType }) {
@@ -291,8 +321,10 @@ export default class GameService {
 
       await this.usersRepository.save(user);
 
-      room.round = this.nextRound(room.round, room.users.length);
-
+      room.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
       await this.roomsRepository.save(room);
     }
 
@@ -301,7 +333,10 @@ export default class GameService {
 
       await this.usersRepository.save(user);
 
-      room.round = this.nextRound(room.round, room.users.length);
+      room.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
       room.waiting = false;
 
       await this.roomsRepository.save(room);
@@ -408,7 +443,10 @@ export default class GameService {
 
       await this.usersRepository.save(user);
 
-      room.round = this.nextRound(room.round, room.users.length);
+      room.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
 
       await this.roomsRepository.save(room);
     }
@@ -607,7 +645,10 @@ export default class GameService {
       });
 
       if (allAnswer) {
-        room.round = this.nextRound(room.round, room.users.length);
+        room.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         room.waiting = false;
         await this.roomsRepository.save(room);
         await this.turnDoubtsFalse(sala_id);
@@ -629,10 +670,10 @@ export default class GameService {
         });
 
         currentRoom.waiting = false;
-        currentRoom.round = this.nextRound(
-          currentRoom.round,
-          currentRoom.users.length
-        );
+        currentRoom.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
       }
@@ -647,10 +688,10 @@ export default class GameService {
       await this.killCard(user_id);
       await this.turnDoubtsFalse(sala_id);
       finishRoom.waiting = false;
-      finishRoom.round = this.nextRound(
-        finishRoom.round,
-        finishRoom.users.length
-      );
+      finishRoom.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
 
       await this.roomsRepository.save(finishRoom);
 
@@ -720,7 +761,10 @@ export default class GameService {
           victim_id: null,
           doubtActionType,
         });
-        room.round = this.nextRound(room.round, room.users.length);
+        room.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         room.waiting = false;
 
         await this.roomsRepository.save(room);
@@ -743,10 +787,10 @@ export default class GameService {
         });
 
         currentRoom.waiting = false;
-        currentRoom.round = this.nextRound(
-          currentRoom.round,
-          currentRoom.users.length
-        );
+        currentRoom.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
       }
@@ -767,10 +811,10 @@ export default class GameService {
       });
       await this.turnDoubtsFalse(sala_id);
       finishRoom.waiting = false;
-      finishRoom.round = this.nextRound(
-        finishRoom.round,
-        finishRoom.users.length
-      );
+      finishRoom.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
 
       await this.roomsRepository.save(finishRoom);
 
@@ -840,7 +884,10 @@ export default class GameService {
           victim_id,
           doubtActionType: 1,
         });
-        room.round = this.nextRound(room.round, room.users.length);
+        room.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         room.waiting = false;
 
         await this.roomsRepository.save(room);
@@ -866,7 +913,10 @@ export default class GameService {
       });
 
       if (allAnswer) {
-        room.round = this.nextRound(room.round, room.users.length);
+        room.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         room.waiting = false;
 
         await this.roomsRepository.save(room);
@@ -892,10 +942,10 @@ export default class GameService {
         });
 
         currentRoom.waiting = false;
-        currentRoom.round = this.nextRound(
-          currentRoom.round,
-          currentRoom.users.length
-        );
+        currentRoom.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
       }
@@ -916,10 +966,10 @@ export default class GameService {
       });
       await this.turnDoubtsFalse(sala_id);
       finishRoom.waiting = false;
-      finishRoom.round = this.nextRound(
-        finishRoom.round,
-        finishRoom.users.length
-      );
+      finishRoom.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
 
       await this.roomsRepository.save(finishRoom);
 
@@ -941,10 +991,10 @@ export default class GameService {
         });
 
         currentRoom.waiting = false;
-        currentRoom.round = this.nextRound(
-          currentRoom.round,
-          currentRoom.users.length
-        );
+        currentRoom.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
       }
@@ -958,10 +1008,10 @@ export default class GameService {
       });
       await this.turnDoubtsFalse(sala_id);
       finishRoom.waiting = false;
-      finishRoom.round = this.nextRound(
-        finishRoom.round,
-        finishRoom.users.length
-      );
+      finishRoom.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
 
       await this.roomsRepository.save(finishRoom);
 
@@ -1023,7 +1073,10 @@ export default class GameService {
           victim_id: null,
           doubtActionType: 4,
         });
-        room.round = this.nextRound(room.round, room.users.length);
+        room.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         room.waiting = false;
 
         await this.roomsRepository.save(room);
@@ -1052,10 +1105,10 @@ export default class GameService {
         });
 
         currentRoom.waiting = false;
-        currentRoom.round = this.nextRound(
-          currentRoom.round,
-          currentRoom.users.length
-        );
+        currentRoom.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
       }
@@ -1077,10 +1130,10 @@ export default class GameService {
       });
       await this.turnDoubtsFalse(sala_id);
       finishRoom.waiting = false;
-      finishRoom.round = this.nextRound(
-        finishRoom.round,
-        finishRoom.users.length
-      );
+      finishRoom.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
 
       await this.roomsRepository.save(finishRoom);
 
@@ -1150,7 +1203,11 @@ export default class GameService {
           victim_id,
           doubtActionType: 2,
         });
-        room.round = this.nextRound(room.round, room.users.length);
+
+        room.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         room.waiting = false;
 
         await this.roomsRepository.save(room);
@@ -1179,7 +1236,10 @@ export default class GameService {
 
       await this.usersRepository.save(userRound);
 
-      room.round = this.nextRound(room.round, room.users.length);
+      room.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
       room.waiting = false;
 
       await this.roomsRepository.save(room);
@@ -1220,10 +1280,10 @@ export default class GameService {
 
         currentRoom.waiting = false;
 
-        currentRoom.round = this.nextRound(
-          currentRoom.round,
-          currentRoom.users.length
-        );
+        room.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
 
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
@@ -1261,10 +1321,10 @@ export default class GameService {
 
       await this.turnDoubtsFalse(sala_id);
       finishRoom.waiting = false;
-      finishRoom.round = this.nextRound(
-        finishRoom.round,
-        finishRoom.users.length
-      );
+      finishRoom.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
 
       await this.roomsRepository.save(finishRoom);
 
@@ -1306,10 +1366,10 @@ export default class GameService {
         });
 
         currentRoom.waiting = false;
-        currentRoom.round = this.nextRound(
-          currentRoom.round,
-          currentRoom.users.length
-        );
+        currentRoom.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
         await this.roomsRepository.save(currentRoom);
         return io.emit("passRound");
       }
@@ -1339,10 +1399,10 @@ export default class GameService {
       });
       await this.turnDoubtsFalse(sala_id);
       finishRoom.waiting = false;
-      finishRoom.round = this.nextRound(
-        finishRoom.round,
-        finishRoom.users.length
-      );
+      finishRoom.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
 
       await this.roomsRepository.save(finishRoom);
 
