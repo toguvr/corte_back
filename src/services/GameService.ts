@@ -30,6 +30,15 @@ export default class GameService {
     this.cardsRepository = getCustomRepository(CardsRepository);
   }
 
+  async clean() {
+    await this.userCardRepository.clear();
+    await this.cardsRepository.clear();
+    await this.usersRepository.clear();
+    await this.roomsRepository.clear();
+
+    return;
+  }
+
   embaralhar(cartasParaEmbaralhar: string[]) {
     for (
       var j, x, i = cartasParaEmbaralhar.length;
@@ -273,7 +282,15 @@ export default class GameService {
       ) {
         //pega o index de quem esta jogando, soma +1 para pegar o round dele e soma mais um para ser o proximo jogador.
         next_round = userInRoundIndex + 2;
-      } else if (userInRoundIndex === -1) {
+      } else if (
+        userInRoundIndex === -1 &&
+        Number(room.round) > Number(room.users.length)
+      ) {
+        next_round = 1;
+      } else if (
+        userInRoundIndex === -1 &&
+        Number(room.round) <= Number(room.users.length)
+      ) {
         next_round = room.round;
       } else {
         next_round = 1;

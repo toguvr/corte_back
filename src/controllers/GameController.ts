@@ -4,6 +4,19 @@ import GameService from "../services/GameService";
 import { io } from "../http";
 
 export default class GameController {
+  async clean(request: Request, response: Response) {
+    const gameService = new GameService();
+    try {
+      const room = await gameService.clean();
+
+      return response.status(200).send();
+    } catch (error) {
+      return response.status(400).json({
+        message: error.message,
+      });
+    }
+  }
+
   async create(req: Request, response: Response) {
     const { sala_id, user_id } = req.body;
 

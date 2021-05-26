@@ -10,7 +10,7 @@ const routes = Router();
 
 routes.get("/sala/:room_id", roomController.show);
 routes.post("/sala", roomController.create);
-routes.get("/sala/clean-all", roomController.clean);
+routes.get("/sala/clean-all", gameController.clean);
 routes.post("/sala/iniciar", gameController.create);
 routes.post("/sala/action", gameController.action);
 routes.post("/sala/acao-duvido-start", gameController.actionDoubt);
