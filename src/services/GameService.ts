@@ -550,7 +550,7 @@ export default class GameService {
         await this.turnDoubtsFalse(sala_id);
 
         throw new AppError(
-          `O ${userDoubt.username} duvidou primeiro. você apenas passará automaticamente.`
+          `O ${userDoubt?.username} duvidou primeiro. você apenas passará automaticamente.`
         );
       }
 
@@ -563,7 +563,7 @@ export default class GameService {
         victim_id: room.users[Number(room.round) - 1].id,
         user_id,
         type: "block",
-        username: user.username,
+        username: user?.username,
       });
 
       return room;
@@ -1304,12 +1304,10 @@ export default class GameService {
         },
       });
 
-      if (!doubtUser) {
-        throw new AppError("Jogador" + doubtUser?.username + " morreu.");
-      }
-
-      if (Number(doubtUser.cards.length) > 0) {
-        await this.killCard(user_id);
+      if (doubtUser) {
+        if (Number(doubtUser.cards.length) > 0) {
+          await this.killCard(user_id);
+        }
       }
 
       const finishRoom = await this.roomsRepository.findOne({
@@ -1349,12 +1347,10 @@ export default class GameService {
           },
         });
 
-        if (!doubtUser) {
-          throw new AppError("Jogador" + doubtUser?.username + " morreu.");
-        }
-
-        if (Number(doubtUser?.cards) > 0) {
-          await this.killCard(victim_id);
+        if (doubtUser) {
+          if (Number(doubtUser?.cards) > 0) {
+            await this.killCard(victim_id);
+          }
         }
 
         await this.turnDoubtsFalse(sala_id);
