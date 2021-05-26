@@ -21,6 +21,19 @@ export default class RoomController {
     }
   }
 
+  async clean(request: Request, response: Response) {
+    const roomsService = new RoomsService();
+    try {
+      const room = await roomsService.clean();
+
+      return response.status(200).send();
+    } catch (error) {
+      return response.status(400).json({
+        message: error.message,
+      });
+    }
+  }
+
   async show(request: Request, response: Response) {
     const { room_id } = request.params;
 

@@ -54,6 +54,12 @@ export default class RoomsService {
     return roomExists;
   }
 
+  async clean() {
+    const roomExists = await this.roomsRepository.clear();
+
+    return roomExists;
+  }
+
   async create({ nome_sala, nome_usuario, avatar }: IRoomsCreate) {
     const roomExists = await this.roomsRepository.findOne({
       relations: ["users", "users.cards"],
