@@ -221,6 +221,13 @@ export default class GameService {
       throw new AppError("Apenas o criador da sala pode iniciar a partida.");
     }
 
+    if (Number(room.users.length) === 1) {
+      room.round = 0;
+      await this.roomsRepository.save(room);
+
+      return room;
+    }
+
     await this.turnDoubtsFalse(sala_id);
 
     const deck = await this.mountDeck(room.users.length, sala_id);
@@ -407,13 +414,12 @@ export default class GameService {
         await this.usersRepository.save(user);
       }
       if (String(doubtActionType) === "4") {
-        if (Number(user.cards.length) < 1) {
-          throw new AppError("Você não pode trocar cartas se não tem nenhuma.");
-        }
-
         const cardToRemoveFromHand = await this.userCardRepository.find({
           user_id,
         });
+        if (Number(cardToRemoveFromHand.length) < 1) {
+          throw new AppError("Você não pode trocar cartas se não tem nenhuma.");
+        }
 
         const deckCards = await this.cardsRepository.find({
           where: {
