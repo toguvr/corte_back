@@ -684,6 +684,13 @@ export default class GameService {
       if (!hasDuque) {
         await this.killCard(victim_id);
         await this.turnDoubtsFalse(sala_id);
+        await this.action({
+          sala_id,
+          user_id: room.users[Number(room.round) - 1].id,
+          action: 2,
+          victim_id: null,
+          doubtActionType: null,
+        });
         const currentRoom = await this.roomsRepository.findOne({
           relations: ["users", "users.cards"],
           where: {
