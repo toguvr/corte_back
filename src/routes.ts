@@ -18,6 +18,7 @@ routes.post("/sala/acao-duvido-start-block", gameController.actionDoubtBlock);
 routes.post("/sala/resposta-duvido", gameController.answerDoubt);
 routes.post("/sala/duvido", gameController.doubtDuque);
 routes.post("/sala/duvido/poder/duque", gameController.doubtDuquePower);
+routes.post("/sala/duvido/poder/condessa", gameController.doubtCondessaPower);
 routes.post("/sala/duvido/poder/assassino", gameController.doubtAssassinoPower);
 routes.post("/sala/duvido/poder/capitao", gameController.doubtCapitaoPower);
 routes.post(

@@ -20,6 +20,12 @@ io.on("connect", (socket) => {
     socket.to(`room${room_id}`).emit("joinRoom");
   });
 
+  socket.on("newMsg", ({ room_id, msg, user }) => {
+    socket.broadcast
+      .to(`room${room_id}`)
+      .emit("newMsg", { room_id, msg, user });
+  });
+
   socket.on("leaveRoom", async (room_id) => {
     await roomsService.deleteFromRoom(user_id);
     socket.leave(`room${room_id}`);

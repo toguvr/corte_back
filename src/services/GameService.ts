@@ -161,6 +161,12 @@ export default class GameService {
 
     const card = cards[Math.floor(Math.random() * (cards.length - 0)) + 0];
 
+    const backToDeck = this.cardsRepository.create({
+      room_id: victim.room_id,
+      name: card.name,
+    });
+
+    await this.cardsRepository.save(backToDeck);
     await this.userCardRepository.remove(card);
 
     const totalCards = await this.userCardRepository.count({
@@ -412,6 +418,34 @@ export default class GameService {
         await this.killCard(victim_id);
 
         await this.usersRepository.save(user);
+      }
+      if (String(doubtActionType) === "3") {
+        if (user.cards.length >= 2) {
+          throw new AppError("Você não pode comprar se já tem 2 cartas.");
+        }
+
+        if (user.coins < 5) {
+          throw new AppError("Você não pode comprar se não tiver 5 moedas.");
+        }
+
+        const existCards = await this.cardsRepository.find({
+          where: {
+            room_id: sala_id,
+          },
+        });
+
+        const firstInDeck = existCards[0];
+
+        const currentCard = this.userCardRepository.create({
+          name: firstInDeck?.name,
+          user_id,
+        });
+
+        user.coins = Number(user?.coins) - 5;
+
+        await this.usersRepository.save(user);
+        await this.userCardRepository.save(currentCard);
+        await this.cardsRepository.remove(firstInDeck);
       }
       if (String(doubtActionType) === "4") {
         const cardToRemoveFromHand = await this.userCardRepository.find({
@@ -853,6 +887,137 @@ export default class GameService {
     return room;
   }
 
+  async doubtCondessaPower({
+    sala_id,
+    user_id,
+    victim_id,
+    doubt,
+    doubtActionType,
+  }) {
+    const room = await this.roomsRepository.findOne({
+      relations: ["users", "users.cards"],
+      where: {
+        id: sala_id,
+      },
+    });
+
+    if (!room) {
+      throw new AppError("Sala não existe.");
+    }
+
+    const user = await this.usersRepository.findOne({
+      id: user_id,
+    });
+
+    if (!user) {
+      throw new AppError("Usuário não existe.");
+    }
+
+    const in_round_user = await this.usersRepository.findOne({
+      relations: ["cards"],
+      where: {
+        id: room.users[Number(room.round) - 1].id,
+      },
+    });
+
+    if (!in_round_user) {
+      throw new AppError("Usuário não existe.");
+    }
+
+    if (in_round_user.cards.length >= 2) {
+      throw new AppError("O usuário não pode comprar se já tem 2 cartas.");
+    }
+    if (doubt === false) {
+      user.pass = true;
+      await this.usersRepository.save(user);
+
+      const opponents = await this.usersRepository.find({
+        where: {
+          id: Not(room.users[Number(room.round) - 1].id),
+          room_id: sala_id,
+        },
+      });
+
+      const allAnswer = opponents.every((user) => {
+        return user.pass === true || user.doubt === true;
+      });
+
+      if (allAnswer) {
+        await this.action({
+          sala_id,
+          user_id: room.users[Number(room.round) - 1].id,
+          action: 3,
+          victim_id: null,
+          doubtActionType,
+        });
+        room.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
+        room.waiting = false;
+
+        await this.roomsRepository.save(room);
+        await this.turnDoubtsFalse(sala_id);
+        io.emit("passRound");
+      }
+      return io.emit("passOnly");
+    }
+    if (doubt) {
+      const hasCondessa = in_round_user.cards.some(
+        (card) => card.name === cartas[3]
+      );
+
+      if (!hasCondessa) {
+        in_round_user.coins = in_round_user.coins - 5;
+
+        await this.usersRepository.save(in_round_user);
+        await this.killCard(in_round_user.id);
+        await this.turnDoubtsFalse(sala_id);
+        const currentRoom = await this.roomsRepository.findOne({
+          relations: ["users", "users.cards"],
+          where: {
+            id: sala_id,
+          },
+        });
+
+        currentRoom.waiting = false;
+        currentRoom.round = await this.nextRound({
+          room_id: sala_id,
+          user_round_id: room.users[Number(room.round) - 1].id,
+        });
+        await this.roomsRepository.save(currentRoom);
+        return io.emit("passRound");
+      }
+
+      await this.action({
+        sala_id,
+        user_id: room.users[Number(room.round) - 1].id,
+        action: 3,
+        victim_id: null,
+        doubtActionType,
+      });
+      await this.killCard(user_id);
+      const finishRoom = await this.roomsRepository.findOne({
+        relations: ["users", "users.cards"],
+        where: {
+          id: sala_id,
+        },
+      });
+      await this.turnDoubtsFalse(sala_id);
+      finishRoom.waiting = false;
+      finishRoom.round = await this.nextRound({
+        room_id: sala_id,
+        user_round_id: room.users[Number(room.round) - 1].id,
+      });
+
+      await this.roomsRepository.save(finishRoom);
+
+      return io.emit("passRound");
+    }
+
+    return room;
+  }
+
   async doubtCapitaoPower({
     sala_id,
     user_id,
@@ -1010,6 +1175,13 @@ export default class GameService {
       );
 
       if (!hasCapitaoOuEmbaixador) {
+        await this.action({
+          sala_id,
+          user_id: room.users[Number(room.round) - 1].id,
+          action: 3,
+          victim_id,
+          doubtActionType: 1,
+        });
         await this.killCard(victim_id);
         await this.turnDoubtsFalse(sala_id);
         const currentRoom = await this.roomsRepository.findOne({

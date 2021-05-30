@@ -184,6 +184,29 @@ export default class GameController {
     }
   }
 
+  async doubtCondessaPower(req: Request, response: Response) {
+    const { sala_id, user_id, victim_id, doubt, doubtActionType } = req.body;
+
+    const gameService = new GameService();
+
+    try {
+      const room = await gameService.doubtCondessaPower({
+        sala_id,
+        user_id,
+        victim_id,
+        doubt,
+        doubtActionType,
+      });
+
+      // io.emit("doubt", { action, victim_id, user_id });
+      return response.json(room);
+    } catch (error) {
+      return response.status(400).json({
+        message: error.message,
+      });
+    }
+  }
+
   async doubtCapitaoPower(req: Request, response: Response) {
     const { sala_id, user_id, victim_id, doubtType, doubtActionType } =
       req.body;
