@@ -29,6 +29,7 @@ io.on("connect", (socket) => {
   socket.on("leaveRoom", async (room_id) => {
     await roomsService.deleteFromRoom(user_id);
     socket.leave(`room${room_id}`);
+    socket.broadcast.to(`room${room_id}`).emit("AnyleaveRoom");
   });
 
   socket.on("disconnect", async () => {
