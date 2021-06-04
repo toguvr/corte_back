@@ -1170,11 +1170,11 @@ export default class GameService {
       return io.emit("passRound");
     }
     if (doubtType === "block") {
-      const hasCapitaoOuEmbaixador = victim.cards.some(
-        (card) => card.name === cartas[1] || card.name === cartas[4]
+      const hasEmbaixador = victim.cards.some(
+        (card) => card.name === cartas[4]
       );
 
-      if (!hasCapitaoOuEmbaixador) {
+      if (!hasEmbaixador) {
         await this.action({
           sala_id,
           user_id: room.users[Number(room.round) - 1].id,
@@ -1549,7 +1549,7 @@ export default class GameService {
         });
 
         if (doubtUser) {
-          if (Number(doubtUser?.cards) > 0) {
+          if (Number(doubtUser?.cards.length) > 0) {
             await this.killCard(victim_id);
           }
         }
